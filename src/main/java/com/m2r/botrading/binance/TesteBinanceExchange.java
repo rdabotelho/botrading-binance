@@ -33,13 +33,12 @@ public class TesteBinanceExchange {
 		
 		session.getChartDatas(currencyPair, DataChartPeriod.FIFTEEN_MINUTES, LocalDateTime.now(), LocalDateTime.now());
 
-		// String orderBuyId = session.buy(apiAccess, "TRXBTC", "0.00000290",
-		// "387");
-		// session.cancel(apiAccess, orderBuyId, "TRXBTC");
+		//String orderBuyId = session.buy(apiAccess, currencyPair, "0.00000290", "387");
+		// session.cancel(apiAccess, orderBuyId, currencyPair);
 
 		//IBalanceList banlances = session.getBanlances(apiAccess);
 
-		//IOrderList orders = session.getOrders(apiAccess); // Ver 
+		//IOrderList orders = session.getOrders(apiAccess); 
 		
 		//ITickerList tikers = session.getTikers();
 
