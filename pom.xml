@@ -1,0 +1,99 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.m2r.botrading</groupId>
+	<artifactId>botrading-binance</artifactId>
+
+	<parent>
+		<groupId>com.m2r</groupId>
+		<artifactId>botrading</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<properties>
+		<java.version>1.8</java.version>
+		<botrading.api.version>1.0.0-SNAPSHOT</botrading.api.version>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>com.m2r.botrading</groupId>
+			<artifactId>botrading-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.4.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>16.0.1</version>
+		</dependency>
+
+		<!-- Websocket Test -->
+		<dependency>
+			<groupId>ws.wamp.jawampa</groupId>
+			<artifactId>jawampa-core</artifactId>
+			<version>0.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>ws.wamp.jawampa</groupId>
+			<artifactId>jawampa-netty</artifactId>
+			<version>0.5.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.6</version>
+		</dependency>
+
+	</dependencies>
+
+	<repositories>
+		<!-- <repository> <id>Yuhull-Internal</id> <name>Archiva-Yuhull</name> 
+			<url>http://yuhull.com:8082/repository/internal</url> </repository> -->
+		<repository>
+			<id>Yuhull-Snapshots</id>
+			<name>Archiva-Snapshots</name>
+			<url>http://yuhull.com:8082/repository/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
