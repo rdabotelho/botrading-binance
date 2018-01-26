@@ -63,6 +63,9 @@ import com.m2r.botrading.binance.model.chart.BalanceList;
 import com.m2r.botrading.binance.model.chart.ChartDataList;
 
 public class BinanceExchange extends ExchangeService {
+	
+	// As assinaturas da API java fornecedidas pela propria Binance.
+	// https://github.com/binance-exchange/binance-java-api
 
 	public static final String EXCHANGE_ID = "BINANCE";
 
