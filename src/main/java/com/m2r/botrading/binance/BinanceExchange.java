@@ -34,13 +34,13 @@ import com.m2r.botrading.api.model.Currency;
 import com.m2r.botrading.api.model.IApiAccess;
 import com.m2r.botrading.api.model.IBalance;
 import com.m2r.botrading.api.model.IBalanceList;
-import com.m2r.botrading.api.model.IChartData;
 import com.m2r.botrading.api.model.IChartDataList;
 import com.m2r.botrading.api.model.IExchangeOrder;
 import com.m2r.botrading.api.model.IMarketCoin;
 import com.m2r.botrading.api.model.IOrderList;
 import com.m2r.botrading.api.model.ITicker;
 import com.m2r.botrading.api.model.ITickerList;
+import com.m2r.botrading.api.model.MarketCoin;
 import com.m2r.botrading.api.service.ExchangeService;
 import com.m2r.botrading.api.service.ExchangeSession;
 import com.m2r.botrading.api.service.IExchangeSession;
@@ -48,7 +48,7 @@ import com.m2r.botrading.api.util.JsonException;
 import com.m2r.botrading.binance.enums.OrderSide;
 import com.m2r.botrading.binance.enums.OrderType;
 import com.m2r.botrading.binance.enums.TimeInForce;
-import com.m2r.botrading.binance.market.Candlestick;
+import com.m2r.botrading.binance.market.BinanceKline;
 import com.m2r.botrading.binance.model.Account;
 import com.m2r.botrading.binance.model.AssetBalance;
 import com.m2r.botrading.binance.model.BalanceBinance;
@@ -63,15 +63,12 @@ import com.m2r.botrading.binance.model.chart.BalanceList;
 import com.m2r.botrading.binance.model.chart.ChartDataList;
 
 public class BinanceExchange extends ExchangeService {
-	
 
 	public static final String EXCHANGE_ID = "BINANCE";
 
 	private static final String URL_BASE = "https://api.binance.com/api";
 	private static final String V1_API = "/v1";
 	private static final String V3_API = "/v3";
-
-	private static final String URL_TRADING_API = URL_BASE + V3_API;
 
 	private static final String ORDER = "order";
 	private static final String COMMAND_OPEN_ORDERS = "openOrders";
@@ -132,11 +129,9 @@ public class BinanceExchange extends ExchangeService {
 		try {
 
 			String data = commandOrder(apiAccess, currencyPair, price, amount, OrderSide.SELL);
-			JsonSuccessBinance result = parseReturn(data, new TypeToken<JsonSuccessBinance>() {
-			}.getType());
+			JsonSuccessBinance result = parseReturn(data, new TypeToken<JsonSuccessBinance>() {}.getType());
 
 			return result.getOrderId();
-
 		} catch (Exception e) {
 			throw new ExchangeException(e);
 		}
@@ -146,13 +141,10 @@ public class BinanceExchange extends ExchangeService {
 	public String buy(IApiAccess apiAccess, String currencyPair, String price, String amount) throws ExchangeException {
 
 		try {
-
 			String data = commandOrder(apiAccess, currencyPair, price, amount, OrderSide.BUY);
-			JsonSuccessBinance result = parseReturn(data, new TypeToken<JsonSuccessBinance>() {
-			}.getType());
+			JsonSuccessBinance result = parseReturn(data, new TypeToken<JsonSuccessBinance>() {}.getType());
 
 			return result.getOrderId();
-
 		} catch (Exception e) {
 			throw new ExchangeException(e);
 		}
@@ -176,9 +168,8 @@ public class BinanceExchange extends ExchangeService {
 	protected IBalanceList getBanlances(IApiAccess apiAccess, IExchangeSession session) throws ExchangeException {
 		try {
 			Account account = commandCompleteBalances(apiAccess);
-			List<AssetBalance> balances = account.getBalances().stream().filter(b -> !b.getFree().equals("0.00000000"))
-					.collect(Collectors.toList());
-
+			
+			List<AssetBalance> balances = account.getBalances().stream().filter(b -> !b.getFree().equals("0.00000000")).collect(Collectors.toList());
 			Map<String, IBalance> map = new HashMap<>();
 
 			for (AssetBalance balance : balances) {
@@ -194,9 +185,8 @@ public class BinanceExchange extends ExchangeService {
 
 	public Account commandCompleteBalances(IApiAccess apiAccess) throws Exception {
 		Map<String, Object> parameters = new HashMap<>();
-		String data = this.execPublicAuthenticated(apiAccess, V3_API, COMMAND_COMPLETE_BALANCES, parameters);
-		return parseReturn(data, new TypeToken<Account>() {
-		}.getType());
+		String data = this.execTradingGetMethod(apiAccess, V3_API, COMMAND_COMPLETE_BALANCES, parameters);
+		return parseReturn(data, new TypeToken<Account>() {}.getType());
 	}
 
 	@Override
@@ -213,39 +203,24 @@ public class BinanceExchange extends ExchangeService {
 		}
 	}
 
-	/*
-	 * Period (seconds) = [300, 900, 1800, 7200, 14400, 86400] Start and End =
-	 * Timestamp Unix
-	 */
-	public List<IChartData> commandChartDatas(String currencyPair, DataChartPeriod period, Long dateStart, Long dateEnd)
-			throws Exception {
+	public List<BinanceKline> commandChartDatas(String currencyPair, DataChartPeriod period, Long dateStart, Long dateEnd) throws Exception {
 
 		Map<String, String> params = new HashMap<>();
 		params.put("symbol", currencyPair);
-		params.put("interval", "15m"); // Alterar Enum para comportar graficos
-										// da binace e outras exchanges
-		// params.put("startTime", dateStart.toString());
-		// params.put("endTime", dateEnd.toString());
-
-		String data = this.execPublicAPI(COMMAND_CHART_DATA, V1_API, params);
+		params.put("interval", period.getSeconds().toString()); // FIXO até alterar o enum com os Parametros da Binance
+		params.put("startTime", dateStart.toString());
+		params.put("endTime", dateEnd.toString());
 
 		try {
- 
-			// FIXME: Problemas na conversão dos dados. O Retorno da binance é um array posicional e não está fazendo cast para o object
-			// Foi alterado o Candlestick para retornar object to Array mesmo assim não rola.
-			String json = new Gson().toJson(data);
 			
-			Candlestick[] candlestick1 = new Gson().fromJson(json, new TypeToken<Candlestick[]>() {}.getType());
-
-			List<Candlestick> candlestick2 = parseReturn(data, new TypeToken<List<Candlestick>>() {}.getType());
-
+			String data = this.execPublicAPI(COMMAND_CHART_DATA, V1_API, params);
+			List<Object[]> klines = parseReturn(data, new TypeToken<List<Object[]>>() {}.getType());
+			List<BinanceKline> resutl = klines.stream().map(obj -> new BinanceKline(obj)).collect(Collectors.toList());
+			
+			return resutl;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			throw new ExchangeException(e);
 		}
-
-		return parseReturn(data, new TypeToken<List<Candlestick>>() {
-		}.getType());
 	}
 
 	@Override
@@ -258,10 +233,9 @@ public class BinanceExchange extends ExchangeService {
 			Map<String, List<IExchangeOrder>> data = new HashMap<>();
 			for (String coin : coins) {
 
-				List<Order> ordersToCoin = opensOrders.stream().filter(o -> o.getSymbol().equals(coin))
-						.collect(Collectors.toList());
+				List<Order> ordersToCoin = opensOrders.stream().filter(o -> o.getSymbol().equals(coin)).collect(Collectors.toList());
 				List<IExchangeOrder> exchangeOrders = new ArrayList<>();
-
+				
 				for (Order order : ordersToCoin) {
 					exchangeOrders.add(new BinanceExchangeOrder(order));
 				}
@@ -275,10 +249,9 @@ public class BinanceExchange extends ExchangeService {
 
 	public List<Order> commandOpenOrders(IApiAccess apiAccess) throws Exception {
 		Map<String, Object> parameters = new HashMap<>();
-		String data = execPublicAuthenticated(apiAccess, V3_API, COMMAND_OPEN_ORDERS, parameters);
+		String data = execTradingGetMethod(apiAccess, V3_API, COMMAND_OPEN_ORDERS, parameters);
 
-		return parseReturn(data, new TypeToken<List<Order>>() {
-		}.getType());
+		return parseReturn(data, new TypeToken<List<Order>>() {}.getType());
 	}
 
 	@Override
@@ -294,20 +267,20 @@ public class BinanceExchange extends ExchangeService {
 	@Override
 	protected Map<String, IMarketCoin> loadMarketCoins() {
 		Map<String, IMarketCoin> map = new HashMap<>();
-		// try {
-		// Map<String, ITicker> tikersMap = commandTicker();
-		// tikersMap.forEach((k, v) -> {
-		// String marketCoinId = currencyPairToMarketCoinId(k);
-		// IMarketCoin marketCoin = map.get(marketCoinId);
-		// if (marketCoin == null) {
-		// marketCoin = MarketCoin.of(marketCoinId);
-		// map.put(marketCoinId, marketCoin);
-		// }
-		// String currencyId = currencyPairToCurrencyId(k);
-		// marketCoin.createAndAddCurrency(currencyId, currencyId);
-		// });
-		// } catch (Exception e) {
-		// }
+		try {
+			Map<String, ITicker> tikersMap = commandTicker();
+			tikersMap.forEach((k, v) -> {
+				String marketCoinId = currencyPairToMarketCoinId(k);
+				IMarketCoin marketCoin = map.get(marketCoinId);
+				if (marketCoin == null) {
+					marketCoin = MarketCoin.of(marketCoinId);
+					map.put(marketCoinId, marketCoin);
+				}
+				String currencyId = currencyPairToCurrencyId(k);
+				marketCoin.createAndAddCurrency(currencyId, currencyId);
+			});
+		} catch (Exception e) {
+		}
 		return map;
 	}
 
@@ -344,8 +317,7 @@ public class BinanceExchange extends ExchangeService {
 	private List<TickerStatistics> commandTickerStatistics() throws Exception {
 		Map<String, String> params = new HashMap<>();
 		String data = execPublicAPI(COMMAND_24_HR_PRICE_STATISTICS, V1_API, params);
-		return parseReturn(data, new TypeToken<List<TickerStatistics>>() {
-		}.getType());
+		return parseReturn(data, new TypeToken<List<TickerStatistics>>() {}.getType());
 	}
 
 	private static <T> T parseReturn(String data, Type typeOf) throws JsonException {
@@ -383,7 +355,7 @@ public class BinanceExchange extends ExchangeService {
 
 	}
 
-	private String execPublicAuthenticated(IApiAccess apiAccess, String version, String command,
+	private String execTradingGetMethod(IApiAccess apiAccess, String version, String command,
 			Map<String, Object> parameters) throws Exception {
 
 		StringBuilder queryArgs = aplicarParametrosUrl(parameters);
@@ -410,7 +382,7 @@ public class BinanceExchange extends ExchangeService {
 		StringBuilder queryArgs = aplicarParametrosUrl(parameters);
 		String signature = encode(apiAccess.getSecretKey(), queryArgs.toString());
 
-		StringBuilder requestUrl = new StringBuilder(URL_TRADING_API);
+		StringBuilder requestUrl = new StringBuilder(this.getUrlTradingAPI());
 		requestUrl.append("/").append(command);
 		requestUrl.append("?" + queryArgs).append("&signature=" + signature);
 
@@ -431,7 +403,7 @@ public class BinanceExchange extends ExchangeService {
 		StringBuilder queryArgs = aplicarParametrosUrl(parameters);
 		String signature = encode(apiAccess.getSecretKey(), queryArgs.toString());
 
-		StringBuilder requestUrl = new StringBuilder(URL_TRADING_API);
+		StringBuilder requestUrl = new StringBuilder(this.getUrlTradingAPI());
 		requestUrl.append("/").append(command);
 		requestUrl.append("?" + queryArgs).append("&signature=" + signature);
 
@@ -470,6 +442,10 @@ public class BinanceExchange extends ExchangeService {
 		SecretKeySpec secret_key = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA256");
 		sha256_HMAC.init(secret_key);
 		return Hex.encodeHexString(sha256_HMAC.doFinal(data.getBytes("UTF-8")));
+	}
+	
+	public String getUrlTradingAPI() {
+		return URL_BASE + V3_API;
 	}
 
 }

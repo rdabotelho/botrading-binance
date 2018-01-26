@@ -13,8 +13,8 @@ public class BalanceBinance implements IBalance {
 
 	public BalanceBinance(AssetBalance balance) {
 		this.coin = balance.getAsset();
-		balance.getFree(); // Valor Livre para transações
-		balance.getLocked(); // Valor bloqueado em transações 
+		this.available = balance.getFree(); 
+		this.btcValue = new BigDecimal(this.available).add(new BigDecimal(balance.getLocked())).toString();
 	}
 
 	public String getCoin() {
