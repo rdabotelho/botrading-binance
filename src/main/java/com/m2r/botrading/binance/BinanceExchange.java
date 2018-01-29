@@ -31,12 +31,13 @@ import com.google.gson.Gson;
 import com.m2r.botrading.api.enums.DataChartPeriod;
 import com.m2r.botrading.api.exception.ExchangeException;
 import com.m2r.botrading.api.model.Currency;
+import com.m2r.botrading.api.model.CurrencyFactory;
+import com.m2r.botrading.api.model.CurrencyPairIds;
 import com.m2r.botrading.api.model.IApiAccess;
 import com.m2r.botrading.api.model.IBalance;
 import com.m2r.botrading.api.model.IBalanceList;
 import com.m2r.botrading.api.model.IChartDataList;
 import com.m2r.botrading.api.model.IExchangeOrder;
-import com.m2r.botrading.api.model.IMarketCoin;
 import com.m2r.botrading.api.model.IOrderList;
 import com.m2r.botrading.api.model.ITicker;
 import com.m2r.botrading.api.model.ITickerList;
@@ -52,6 +53,7 @@ import com.m2r.botrading.binance.market.BinanceKline;
 import com.m2r.botrading.binance.model.Account;
 import com.m2r.botrading.binance.model.AssetBalance;
 import com.m2r.botrading.binance.model.BalanceBinance;
+import com.m2r.botrading.binance.model.BinanceCurrencyFactory;
 import com.m2r.botrading.binance.model.BinanceExchangeOrder;
 import com.m2r.botrading.binance.model.ExchangeOrderList;
 import com.m2r.botrading.binance.model.JsonSuccessBinance;
@@ -84,7 +86,7 @@ public class BinanceExchange extends ExchangeService {
 	private static final BigDecimal IMMEDIATE_FEE = new BigDecimal("0.25");
 
 	@Override
-	public IMarketCoin getDefaultMarketCoin() {
+	public MarketCoin getDefaultMarketCoin() {
 		return getMarketCoin(Currency.BTC);
 	}
 
@@ -99,7 +101,7 @@ public class BinanceExchange extends ExchangeService {
 	}
 
 	@Override
-	public IExchangeSession getSession(IMarketCoin marketCoin, boolean resetPublic, boolean resetPrivate) {
+	public IExchangeSession getSession(MarketCoin marketCoin, boolean resetPublic, boolean resetPrivate) {
 
 		IExchangeSession session = ExchangeSession.createSession(this, marketCoin);
 
@@ -268,19 +270,18 @@ public class BinanceExchange extends ExchangeService {
 	}
 
 	@Override
-	protected Map<String, IMarketCoin> loadMarketCoins() {
-		Map<String, IMarketCoin> map = new HashMap<>();
+	protected Map<String, MarketCoin> loadMarketCoins() {
+		Map<String, MarketCoin> map = new HashMap<>();
 		try {
 			Map<String, ITicker> tikersMap = commandTicker();
 			tikersMap.forEach((k, v) -> {
-				String marketCoinId = currencyPairToMarketCoinId(k);
-				IMarketCoin marketCoin = map.get(marketCoinId);
+				CurrencyPairIds currencyPairIds = getCurrencyFactory().getCurrencyPairConverter().stringToCurrencyPair(k);
+				MarketCoin marketCoin = map.get(currencyPairIds.getMarketCoinId());
 				if (marketCoin == null) {
-					marketCoin = MarketCoin.of(marketCoinId);
-					map.put(marketCoinId, marketCoin);
+					marketCoin = getCurrencyFactory().currencyPairToMarketCoin(currencyPairIds);
+					map.put(currencyPairIds.getMarketCoinId(), marketCoin);
 				}
-				String currencyId = currencyPairToCurrencyId(k);
-				marketCoin.createAndAddCurrency(currencyId, currencyId);
+				marketCoin.addCurrency(getCurrencyFactory().currencyPairToCurrency(marketCoin, currencyPairIds));
 			});
 		} catch (Exception e) {
 		}
@@ -325,10 +326,10 @@ public class BinanceExchange extends ExchangeService {
 
 	private static <T> T parseReturn(String data, Type typeOf) throws JsonException {
 		Gson gson = new Gson();
-		if (data.startsWith("{\"error\"")) {
+		if (data.startsWith("{\"code\"")) {
 			Map<String, Object> result = gson.fromJson(data, new TypeToken<Map<String, Object>>() {
 			}.getType());
-			throw new JsonException(result.get("error").toString());
+			throw new JsonException(result.get("msg").toString());
 		}
 		return (T) gson.fromJson(data, typeOf);
 	}
@@ -449,6 +450,11 @@ public class BinanceExchange extends ExchangeService {
 	
 	public String getUrlTradingAPI() {
 		return URL_BASE + V3_API;
+	}
+	
+	@Override
+	public CurrencyFactory getCurrencyFactory() {
+		return BinanceCurrencyFactory.getInstance();
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.m2r.botrading.api.model.CurrencyPairIds;
 import com.m2r.botrading.api.model.ITicker;
 import com.m2r.botrading.api.model.ITickerList;
 
@@ -33,12 +34,19 @@ private List<ITicker> tikers;
 	
 	@Override
 	public List<ITicker> getTickers(String coin) {
-		return tikers.stream().filter(t -> t.getCurrencyPair().startsWith(coin+"_")).collect(Collectors.toList());
+		return tikers.stream().filter((t) -> {
+			CurrencyPairIds currencyPairIds = BinanceCurrencyPairConverter.getInstance().stringToCurrencyPair(t.getCurrencyPair());
+			return currencyPairIds.getMarketCoinId().equals(coin);
+		})
+		.collect(Collectors.toList());
 	}
 	
 	@Override
 	public ITicker getTicker(String currencyPair) {
-		return tikers.stream().filter(t -> t.getCurrencyPair().equals(currencyPair)).findFirst().orElse(null);
+		return tikers.stream().filter((t) -> {
+			return t.getCurrencyPair().equals(currencyPair);
+		})
+		.findFirst().orElse(null);
 	}
 	
 }
