@@ -16,8 +16,8 @@ public class BalanceBinance implements IBalance {
 
 		this.coin = balance.getAsset();
 		if (Currency.BTC.equals(this.coin)) {
-			this.available = new BigDecimal(balance.getFree()).subtract(new BigDecimal(balance.getLocked())).toString();
-			this.btcValue = balance.getFree();
+			this.available = balance.getFree();
+			this.btcValue = new BigDecimal(balance.getFree()).add(new BigDecimal(balance.getLocked())).toString();
 		}  else {
 			this.available = "0.00000000";
 			this.btcValue = "0.00000000";
