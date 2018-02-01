@@ -2,6 +2,7 @@ package com.m2r.botrading.binance.model;
 
 import java.math.BigDecimal;
 
+import com.m2r.botrading.api.model.Currency;
 import com.m2r.botrading.api.model.IBalance;
 
 public class BalanceBinance implements IBalance {
@@ -12,9 +13,15 @@ public class BalanceBinance implements IBalance {
 	private String btcValue;
 
 	public BalanceBinance(AssetBalance balance) {
+
 		this.coin = balance.getAsset();
-		this.available = balance.getFree(); 
-		this.btcValue = new BigDecimal(this.available).add(new BigDecimal(balance.getLocked())).toString();
+		if (Currency.BTC.equals(this.coin)) {
+			this.available = new BigDecimal(balance.getFree()).subtract(new BigDecimal(balance.getLocked())).toString();
+			this.btcValue = balance.getFree();
+		}  else {
+			this.available = "0.00000000";
+			this.btcValue = "0.00000000";
+		}
 	}
 
 	public String getCoin() {
