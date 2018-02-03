@@ -424,8 +424,8 @@ public class BinanceExchange extends ExchangeService {
 
 	private StringBuilder aplicarParametrosUrl(Map<String, Object> parameters) {
 
-		parameters.put("recvWindow", 10000000);
-		parameters.put("timestamp", String.valueOf(new Date().getTime()));
+		parameters.put("recvWindow", 6_000_000L);
+		parameters.put("timestamp", System.currentTimeMillis());
 
 		StringBuilder queryArgs = new StringBuilder();
 		boolean firstElement = true;
