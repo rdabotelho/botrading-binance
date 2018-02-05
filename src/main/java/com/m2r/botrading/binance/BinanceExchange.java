@@ -2,11 +2,11 @@ package com.m2r.botrading.binance;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +86,11 @@ public class BinanceExchange extends ExchangeService {
 	private static final BigDecimal IMMEDIATE_FEE = new BigDecimal("0.25");
 
 	@Override
+	public String getId() {
+		return EXCHANGE_ID;
+	}
+	
+	@Override
 	public MarketCoin getDefaultMarketCoin() {
 		return getMarketCoin(Currency.BTC);
 	}
@@ -146,7 +151,7 @@ public class BinanceExchange extends ExchangeService {
 	public String buy(IApiAccess apiAccess, String currencyPair, String price, String amount) throws ExchangeException {
 
 		try {
-			String data = commandOrder(apiAccess, currencyPair, price, amount, OrderSide.BUY);
+			String data = commandOrder(apiAccess, currencyPair, price, new BigDecimal(amount).setScale(0,RoundingMode.FLOOR).toString(), OrderSide.BUY);
 			JsonSuccessBinance result = parseReturn(data, new TypeToken<JsonSuccessBinance>() {}.getType());
 
 			return result.getOrderId();

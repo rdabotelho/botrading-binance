@@ -29,8 +29,7 @@ public class TesteBinanceExchange {
 
 		// System.out.println(chartDatas);
 
-		// String orderBuyId = session.buy(apiAccess, currencyPair,
-		// "0.00000290", "387");
+		String orderBuyId = session.buy(apiAccess, currencyPair, "0.00000200", "953");
 		// session.cancel(apiAccess, orderBuyId, currencyPair);
 
 		//IBalanceList banlances = session.getBanlances(apiAccess);
@@ -50,8 +49,8 @@ ibaQvDyjfK5br0f3CGZJ6lOvuWrXuQ3A9KnTslCGn2IW7xJSctQIsQStSuf8tlNZ
 
 	public static class TesteAPIAccess implements IApiAccess {
 
-		private String secretKey = "K2bNh0BpLlliPLvD6Uk1fRqVaw8YrRw8tTT7KzM0Tmtbqh5bTOvlDAtBvoyKjXjb";
-		private String apiKey = "Uii9uCoSrQb7hcfqN1EGJituiAbXX9nQYrg8hmxHaOloWXTjqtzx5Nap6hakfVqO";
+		private String secretKey = "ibaQvDyjfK5br0f3CGZJ6lOvuWrXuQ3A9KnTslCGn2IW7xJSctQIsQStSuf8tlNZ";
+		private String apiKey = "2vnlV0ADtayHMk5CH7YW7ucZhJzfQzrBapwg62K3EtsayA2zuLQ7kQq2QK5ryKsR";
 
 		public String getSecretKey() {
 			return secretKey;
