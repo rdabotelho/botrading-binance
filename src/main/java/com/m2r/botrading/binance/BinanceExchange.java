@@ -2,11 +2,11 @@ package com.m2r.botrading.binance;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +28,6 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import com.m2r.botrading.api.enums.DataChartPeriod;
 import com.m2r.botrading.api.exception.ExchangeException;
 import com.m2r.botrading.api.model.Currency;
 import com.m2r.botrading.api.model.CurrencyFactory;
@@ -37,6 +36,7 @@ import com.m2r.botrading.api.model.IApiAccess;
 import com.m2r.botrading.api.model.IBalance;
 import com.m2r.botrading.api.model.IBalanceList;
 import com.m2r.botrading.api.model.IChartDataList;
+import com.m2r.botrading.api.model.IDataChartPeriod;
 import com.m2r.botrading.api.model.IExchangeOrder;
 import com.m2r.botrading.api.model.IOrderList;
 import com.m2r.botrading.api.model.ITicker;
@@ -85,6 +85,11 @@ public class BinanceExchange extends ExchangeService {
 	private static final BigDecimal FEE = new BigDecimal("0.15");
 	private static final BigDecimal IMMEDIATE_FEE = new BigDecimal("0.25");
 
+	@Override
+	public String getId() {
+		return EXCHANGE_ID;
+	}
+	
 	@Override
 	public MarketCoin getDefaultMarketCoin() {
 		return getMarketCoin(Currency.BTC);
@@ -146,7 +151,7 @@ public class BinanceExchange extends ExchangeService {
 	public String buy(IApiAccess apiAccess, String currencyPair, String price, String amount) throws ExchangeException {
 
 		try {
-			String data = commandOrder(apiAccess, currencyPair, price, amount, OrderSide.BUY);
+			String data = commandOrder(apiAccess, currencyPair, price, new BigDecimal(amount).setScale(0,RoundingMode.FLOOR).toString(), OrderSide.BUY);
 			JsonSuccessBinance result = parseReturn(data, new TypeToken<JsonSuccessBinance>() {}.getType());
 
 			return result.getOrderId();
@@ -195,7 +200,7 @@ public class BinanceExchange extends ExchangeService {
 	}
 
 	@Override
-	protected IChartDataList getChartDatas(String currencyPair, DataChartPeriod period, LocalDateTime start,
+	protected IChartDataList getChartDatas(String currencyPair, IDataChartPeriod period, LocalDateTime start,
 			LocalDateTime end, IExchangeSession session) throws ExchangeException {
 		try {
 			ZonedDateTime endDate = ZonedDateTime.of(end, EXCHANGE_ZONE_ID);
@@ -208,7 +213,7 @@ public class BinanceExchange extends ExchangeService {
 		}
 	}
 
-	public List<BinanceKline> commandChartDatas(String currencyPair, DataChartPeriod period, Long dateStart, Long dateEnd) throws Exception {
+	public List<BinanceKline> commandChartDatas(String currencyPair, IDataChartPeriod period, Long dateStart, Long dateEnd) throws Exception {
 
 		Map<String, String> params = new HashMap<>();
 		params.put("symbol", currencyPair);
