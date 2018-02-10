@@ -205,9 +205,11 @@ public class BinanceExchange extends ExchangeService {
 		try {
 			ZonedDateTime endDate = ZonedDateTime.of(end, EXCHANGE_ZONE_ID);
 			ZonedDateTime startDate = ZonedDateTime.of(start, EXCHANGE_ZONE_ID);
-
-			return ChartDataList.of(this.commandChartDatas(currencyPair, period, startDate.toInstant().getEpochSecond(),
-					endDate.toInstant().getEpochSecond()));
+				
+			long startMilisecods = start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+			long endMilisecods = end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+			
+			return ChartDataList.of(this.commandChartDatas(currencyPair, period, startMilisecods,	endMilisecods));
 		} catch (Exception e) {
 			throw new ExchangeException(e);
 		}
